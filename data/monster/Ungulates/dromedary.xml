@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <monster name="Dromedary" nameDescription="a dromedary" race="blood" experience="0" speed="170">
 	<health now="45" max="45" />
 	<look type="404" corpse="13528" />
@@ -15,9 +15,6 @@
 		<flag targetdistance="4" />
 		<flag staticattack="90" />
 		<flag runonhealth="45" />
-		<flag canwalkonenergy="0" />
-		<flag canwalkonfire="0" />
-		<flag canwalkonpoison="0" />
 	</flags>
 	<attacks>
 		<attack name="melee" interval="2000" min="0" max="-8" />
@@ -27,12 +24,12 @@
 		</attack>
 	</attacks>
 	<defenses armor="5" defense="5" />
-	<voices interval="5000" chance="10">
+	<voices interval="2000" chance="7">
 		<voice sentence="Snort" />
 		<voice sentence="Grunt!" />
 	</voices>
 	<loot>
-		<item name="meat" countmax="2" chance="36000" />
-		<item name="sugar oat" chance="1000" />
+		<item id="2666" countmax="2" chance="36000" />	<!-- meat -->
+		<item id="13939" chance="1000" />				<!-- sugar oat -->
 	</loot>
 </monster>

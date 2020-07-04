@@ -1,118 +1,128 @@
-local positionOffsets = {
-	Position(1, 0, 0), -- east
-	Position(0, 1, 0), -- south
-	Position(-1, 0, 0), -- west
-	Position(0, -1, 0) -- north
-}
+unlockedDoors = { }
 
---[[
-When closing a door with a creature in it findPushPosition will find the most appropriate
-adjacent position following a prioritization order.
-The function returns the position of the first tile that fulfills all the checks in a round.
-The function loops trough east -> south -> west -> north on each following line in that order.
-In round 1 it checks if there's an unhindered walkable tile without any creature.
-In round 2 it checks if there's a tile with a creature.
-In round 3 it checks if there's a tile blocked by a movable tile-blocking item.
-In round 4 it checks if there's a tile blocked by a magic wall or wild growth.
-]]
-local function findPushPosition(creature, round)
-	local pos = creature:getPosition()
-	for _, offset in ipairs(positionOffsets) do
-		local offsetPosition = pos + offset
-		local tile = Tile(offsetPosition)
-		if tile then
-			local creatureCount = tile:getCreatureCount()
-			if round == 1 then
-				if tile:queryAdd(creature) == RETURNVALUE_NOERROR and creatureCount == 0 then
-					if not tile:hasFlag(TILESTATE_PROTECTIONZONE) or (tile:hasFlag(TILESTATE_PROTECTIONZONE) and creature:canAccessPz()) then
-						return offsetPosition
-					end
-				end
-			elseif round == 2 then
-				if creatureCount > 0 then
-					if not tile:hasFlag(TILESTATE_PROTECTIONZONE) or (tile:hasFlag(TILESTATE_PROTECTIONZONE) and creature:canAccessPz()) then
-						return offsetPosition
-					end
-				end
-			elseif round == 3 then
-				local topItem = tile:getTopDownItem()
-				if topItem then
-					if topItem:getType():isMovable() then
-						return offsetPosition
-					end
-				end
-			else
-				if tile:getItemById(ITEM_MAGICWALL) or tile:getItemById(ITEM_WILDGROWTH) then
-					return offsetPosition
-				end
+local function isDoorLocked(keyId, position)
+	if keyId == 0 then
+		return false
+	end
+
+	if unlockedDoors[keyId] then
+		for i = 1, #unlockedDoors[keyId] do
+			if position == unlockedDoors[keyId][i] then
+				return false
 			end
 		end
 	end
-	if round < 4 then
-		return findPushPosition(creature, round + 1)
+
+	return true
+end
+
+local function toggleDoorLock(doorItem, locked)
+	local doorId = doorItem:getId()
+	local keyId = doorItem:getActionId()
+	local doorPosition = doorItem:getPosition()
+
+	if locked then
+		for i = #unlockedDoors[keyId], 1, -1 do
+			if unlockedDoors[keyId][i] == doorPosition then
+				table.remove(unlockedDoors[keyId], i)
+			end
+		end
+
+		if not doors[doorId] then
+			doorItem:transform(doorId - 1)
+		end
+		return
 	end
+
+	if not unlockedDoors[keyId] then
+		unlockedDoors[keyId] = {}
+	end
+
+	doorItem:transform(doors[doorId])
+	unlockedDoors[keyId][#unlockedDoors[keyId] + 1] = doorPosition
 end
 
 function onUse(player, item, fromPosition, target, toPosition, isHotkey)
-	local itemId = item:getId()
-	if table.contains(questDoors, itemId) then
-		if player:getStorageValue(item.actionid) ~= -1 then
+	local itemId, actionId = item:getId(), item:getActionId()
+	if isInArray(questDoors, itemId) then
+		if player:getStorageValue(actionId) ~= -1 then
 			item:transform(itemId + 1)
 			player:teleportTo(toPosition, true)
 		else
 			player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "The door seems to be sealed against unwanted intruders.")
 		end
 		return true
-	elseif table.contains(levelDoors, itemId) then
-		if item.actionid > 0 and player:getLevel() >= item.actionid - actionIds.levelDoor then
+
+	elseif isInArray(levelDoors, itemId) then
+		if actionId > 0 and player:getLevel() >= actionId - 1000 then
 			item:transform(itemId + 1)
 			player:teleportTo(toPosition, true)
 		else
 			player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "Only the worthy may pass.")
 		end
 		return true
-	elseif table.contains(keys, itemId) then
-		if target.actionid > 0 then
-			if item.actionid == target.actionid and doors[target.itemid] then
-				target:transform(doors[target.itemid])
-				return true
-			end
-			player:sendTextMessage(MESSAGE_STATUS_SMALL, "The key does not match.")
-			return true
+
+	elseif isInArray(keys, itemId) then
+		if not target
+				or not target:isItem()
+				or not target:getType():isDoor()
+				or Tile(toPosition):getHouse() then
+			return false
 		end
-		return false
+
+		local targetId = target:getId()
+		if isInArray(openSpecialDoors, targetId)
+				or isInArray(questDoors, targetId)
+				or isInArray(levelDoors, targetId) then
+			return false
+		end
+
+		local targetActionId = target:getActionId()
+		if targetActionId > 0 and actionId == targetActionId then
+			if not isDoorLocked(targetActionId, toPosition) then
+				toggleDoorLock(target, true)
+			elseif doors[targetId] then
+				toggleDoorLock(target, false)
+			end
+		else
+			player:sendCancelMessage("The key does not match.")
+		end
+
+		return true
 	end
 
-	if table.contains(horizontalOpenDoors, itemId) or table.contains(verticalOpenDoors, itemId) then
-		local creaturePositionTable = {}
-		local doorCreatures = Tile(toPosition):getCreatures()
-		if doorCreatures and #doorCreatures > 0 then
-			for _, doorCreature in pairs(doorCreatures) do
-				local pushPosition = findPushPosition(doorCreature, 1)
-				if not pushPosition then
-					player:sendCancelMessage(RETURNVALUE_NOTENOUGHROOM)
-					return true
-				end
-				table.insert(creaturePositionTable, {creature = doorCreature, position = pushPosition})
+	if isInArray(horizontalOpenDoors, itemId) or isInArray(verticalOpenDoors, itemId) then
+		local doorCreature = Tile(toPosition):getTopCreature()
+		if doorCreature then
+			toPosition.x = toPosition.x + 1
+			local query = Tile(toPosition):queryAdd(doorCreature, bit.bor(FLAG_IGNOREBLOCKCREATURE, FLAG_PATHFINDING))
+			if query ~= RETURNVALUE_NOERROR then
+				toPosition.x = toPosition.x - 1
+				toPosition.y = toPosition.y + 1
+				query = Tile(toPosition):queryAdd(doorCreature, bit.bor(FLAG_IGNOREBLOCKCREATURE, FLAG_PATHFINDING))
 			end
-			for _, tableCreature in ipairs(creaturePositionTable) do
-				tableCreature.creature:teleportTo(tableCreature.position, true)
-			end
-		end
 
-		if not table.contains(openSpecialDoors, itemId) then
+			if query ~= RETURNVALUE_NOERROR then
+				player:sendCancelMessage(query)
+				return true
+			end
+
+			doorCreature:teleportTo(toPosition, true)
+		end
+		if not isInArray(openSpecialDoors, itemId) then
 			item:transform(itemId - 1)
 		end
 		return true
 	end
 
 	if doors[itemId] then
-		if item.actionid == 0 then
+		if not isDoorLocked(actionId, toPosition) then
 			item:transform(doors[itemId])
 		else
-			player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "It is locked.")
+			player:sendTextMessage(MESSAGE_INFO_DESCR, "It is locked.")
 		end
 		return true
 	end
+
 	return false
 end

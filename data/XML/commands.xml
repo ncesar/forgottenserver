@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<commands>
+	<command cmd="/reload" group="6" acctype="9" log="yes" />
+	<command cmd="/raid" group="6" acctype="9" log="yes" />
+	<command cmd="!sellhouse" group="1" acctype="1" log="no" />
+</commands>

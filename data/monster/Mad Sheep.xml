@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<monster name="Mad Sheep" nameDescription="a mad sheep" race="blood" experience="0" speed="116" manacost="0">
+    <health now="22" max="22"/>
+    <look type="14" corpse="2905"/>
+    <targetchange interval="5000" chance="8"/>
+    <strategy attack="0" defense="100"/>
+    <flags>
+        <flag summonable="0"/>
+        <flag attackable="1"/>
+        <flag hostile="1"/>
+        <flag illusionable="0"/>
+        <flag convinceable="0"/>
+        <flag pushable="1"/>
+        <flag canpushitems="0"/>
+        <flag staticattack="50"/>
+        <flag lightlevel="0"/>
+        <flag lightcolor="0"/>
+        <flag targetdistance="1"/>
+        <flag runonhealth="14"/>
+    </flags>
+    <attacks/>
+    <defenses armor="15" defense="20">
+        <defense name="healing" interval="5000" chance="30" min="5" max="15">
+            <attribute key="areaEffect" value="hearts"/>
+        </defense>
+        <defense name="speed" interval="1000" chance="12" speedchange="141" duration="8000">
+            <attribute key="areaEffect" value="redshimmer"/>
+        </defense>
+    </defenses>
+    <immunities>
+        <immunity physical="0"/>
+        <immunity energy="0"/>
+        <immunity fire="0"/>
+        <immunity poison="0"/>
+        <immunity lifedrain="0"/>
+        <immunity paralyze="0"/>
+        <immunity outfit="0"/>
+        <immunity drunk="0"/>
+        <immunity invisible="0"/>
+    </immunities>
+    <voices interval="2000" chance="5">
+        <voice sentence="Maeh"/>
+        <voice sentence="Groar!"/>
+        <voice sentence="Fchhhh!"/>
+    </voices>
+    <loot>
+    </loot>
+</monster>

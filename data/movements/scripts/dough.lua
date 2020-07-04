@@ -1,10 +1,15 @@
+local pastries = {
+	[2693] = 2689,
+	[6277] = 6278
+}
+
 function onAddItem(moveitem, tileitem, position)
-	if moveitem:getId() == 2693 then
-		moveitem:transform(2689)
-		position:sendMagicEffect(CONST_ME_HITBYFIRE)
-	elseif moveitem:getId() == 6277 then
-		moveitem:transform(2687, 12)
-		position:sendMagicEffect(CONST_ME_HITBYFIRE)
+	local pastryId = pastries[moveitem.itemid]
+	if not pastryId then
+		return true
 	end
+
+	moveitem:transform(pastryId)
+	position:sendMagicEffect(CONST_ME_HITBYFIRE)
 	return true
 end

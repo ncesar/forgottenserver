@@ -7,14 +7,14 @@ function onSay(player, words, param)
 		return false
 	end
 
-	local position = player:getPosition()
-	local npc = Game.createNpc(param, position)
+	local orig = player:getPosition()
+	local npc = Game.createNpc(param, orig)
 	if npc then
-		npc:setMasterPos(position)
-		position:sendMagicEffect(CONST_ME_MAGIC_RED)
+		orig:sendMagicEffect(CONST_ME_MAGIC_RED)
+		npc:setMasterPos(orig)
 	else
 		player:sendCancelMessage("There is not enough room.")
-		position:sendMagicEffect(CONST_ME_POFF)
+		orig:sendMagicEffect(CONST_ME_POFF)
 	end
 	return false
 end

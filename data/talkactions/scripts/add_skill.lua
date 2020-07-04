@@ -30,20 +30,23 @@ function onSay(player, words, param)
 		return false
 	end
 
-	local split = param:splitTrimmed(",")
-	if not split[2] then
+	local split = param:split(",")
+	if split[2] == nil then
 		player:sendCancelMessage("Insufficient parameters.")
 		return false
 	end
 
 	local target = Player(split[1])
-	if not target then
+	if target == nil then
 		player:sendCancelMessage("A player with that name is not online.")
 		return false
 	end
 
+	-- Trim left
+	split[2] = split[2]:gsub("^%s*(.-)$", "%1")
+
 	local count = 1
-	if split[3] then
+	if split[3] ~= nil then
 		count = tonumber(split[3])
 	end
 

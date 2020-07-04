@@ -2,7 +2,7 @@ function spellCallback(cid, position, count)
 	if Creature(cid) then
 		if count > 0 or math.random(0, 1) == 1 then
 			position:sendMagicEffect(CONST_ME_HITBYFIRE)
-			doAreaCombat(cid, COMBAT_FIREDAMAGE, position, 0, -100, -100, CONST_ME_EXPLOSIONHIT)
+			doAreaCombatHealth(cid, COMBAT_FIREDAMAGE, position, 0, -100, -100, CONST_ME_EXPLOSIONHIT)
 		end
 
 		if count < 5 then
@@ -17,7 +17,7 @@ function onTargetTile(creature, position)
 end
 
 local combat = Combat()
-combat:setArea(createCombatArea(AREA_CIRCLE5X5))
+combat:setArea(createCombatArea(AREA_CROSS5X5))
 combat:setCallback(CALLBACK_PARAM_TARGETTILE, "onTargetTile")
 
 function onCastSpell(creature, variant, isHotkey)

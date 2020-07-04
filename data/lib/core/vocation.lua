@@ -1,7 +1,11 @@
 function Vocation.getBase(self)
-	local base = self
-	while base:getDemotion() do
-		base = base:getDemotion()
+	local demotion = self:getDemotion()
+	while demotion do
+		local tmp = demotion:getDemotion()
+		if not tmp then
+			return demotion
+		end
+		demotion = tmp
 	end
-	return base
+	return self
 end
